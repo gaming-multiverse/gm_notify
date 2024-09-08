@@ -5,7 +5,7 @@
 [Join today!](https://discord.gg/ERmEPsafmR)
 
 ## Please read the docs first!
-[Visit gm_notify documentation](https://docs.gamingmultiverse.gr/redm-scripts/free-scripts/gm_notify)
+[Visit gm_notify documentation](https://docs.gamingmultiverse.gr/redm-scripts/free-scripts/gm_notify/installation)
 
 ## Features
 
