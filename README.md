@@ -31,6 +31,7 @@
     ```bash
     start gm_notify
     ```
+6. If you want the script to function normaly you should probably not change the scripts name!
 
 ## Usage
 
@@ -83,12 +84,16 @@ gm_notify/
 │   └── client.lua
 │
 ├── fxmanifest.lua             # Resource manifest for FiveM.
-├── web/                      # Additional web assets.
+├── web/                      # web assets.
 ```
 
 ## Development
 
 1. **Modifying Notification UI**: You can customize the HTML/CSS files in the `web` folder to change the look and feel of the notifications.
+2. If you want to make changes to the script you can run it on a browser with:
+   ```bash
+   npm run dev
+   ```
 
 ## Requirements
 - `ox_lib`
