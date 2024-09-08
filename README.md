@@ -1,5 +1,5 @@
 
-# GM Notify System
+# gm_notify
 
 ## Join our new community if you need help
 [Join today!](https://discord.gg/ERmEPsafmR)
