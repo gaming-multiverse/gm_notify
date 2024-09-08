@@ -1,12 +1,11 @@
 
 # GM Notify System
 
-## Join our new community
+## Join our new community if you need help
 [Join today!](https://discord.gg/ERmEPsafmR)
 
-## Overview
-
-**gm_notify** is a simple notification script for RedM.
+## Please read the docs first!
+[Visit gm_notify documentation](https://docs.gamingmultiverse.gr/redm-scripts/free-scripts/gm_notify)
 
 ## Features
 
@@ -18,8 +17,16 @@
 ## Installation
 
 1. Download or clone this repository.
-2. Place the script folder (`gm_notify`) in the appropriate location of your resource directory.
-3. Add the following line to your server configuration (`server.cfg`):
+2. navigate into the web folder and run
+   ```bash
+   npm i
+   ```
+3. once that's complete run
+   ```bash
+   npm run build
+   ```
+4. This will build the files found in the releases and the script should function normaly.
+5. Add the following line to your server configuration (`server.cfg`):
 
     ```bash
     start gm_notify
@@ -61,7 +68,7 @@ The notifications are rendered using an HTML interface, allowing for customizati
 
 Configuration options are stored in the `shared/client.lua` file. You can modify options such as:
 
-- `ox_lib_replacement`: Set this to `true` if you're using the `ox_lib` to handle notifications. Please visit https://docs.gamingmultiverse.gr for more info 
+- `ox_lib_replacement`: Set this to `true` if you're using the `ox_lib` to handle notifications. Please visit [our documentation](https://docs.gamingmultiverse.gr) for more info.
 
 ## File Structure
 
