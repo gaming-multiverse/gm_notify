@@ -1,10 +1,11 @@
-
 # gm_notify
 
 ## Join our new community if you need help
+
 [Join today!](https://discord.gg/ERmEPsafmR)
 
 ## Please read the docs first!
+
 [Visit gm_notify documentation](https://docs.gamingmultiverse.gr/redm-scripts/free-scripts/gm_notify/installation)
 
 ## Features
@@ -28,9 +29,10 @@
 4. This will build the files found in the releases and the script should function normaly.
 5. Add the following line to your server configuration (`server.cfg`):
 
-    ```bash
-    start gm_notify
-    ```
+   ```bash
+   start gm_notify
+   ```
+
 6. If you want the script to function normaly you should probably not change the scripts name!
 
 ## Usage
@@ -39,8 +41,16 @@
 
 In your client scripts, you can trigger notifications using the following event:
 
+Client side
+
 ```lua
 TriggerEvent("ws_notify:client:Nofity", "notifyType", "message", duration)
+```
+
+Server side
+
+```lua
+TriggerClientEvent("ws_notify:client:Nofity", source, "notifyType", "message", duration)
 ```
 
 - `notifyType`: The type of notification (e.g., `warning`, `primary`, etc.).
@@ -56,6 +66,7 @@ TriggerEvent("ox_lib:notify", data)
 ```
 
 Where `data` is a table that can include the following fields:
+
 - `type`: Notification type (e.g., `success`, `error`, etc.).
 - `title`: The title of the notification.
 - `description`: The description of the notification.
@@ -96,6 +107,7 @@ gm_notify/
    ```
 
 ## Requirements
+
 - `ox_lib`
 
 ## Contributing
