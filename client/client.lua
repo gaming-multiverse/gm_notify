@@ -46,4 +46,8 @@ if Config.ox_lib_replacement then
 	end)
 end
 
+RegisterNUICallback("ws_notify:nui:sendMaxVisibleNotifications", function(data, cb)
+	cb(Config.maxVisibleNotifications)
+end)
+
 exports("notify", NotificationNuiHandler)

@@ -1,133 +1,139 @@
 <script lang="ts">
-  import { fade, fly } from "svelte/transition";
-  import { useNuiEvent } from "../utils/useNuiEvent";
+  import { fly, fade } from "svelte/transition";
   import { onMount } from "svelte";
+  import { useNuiEvent } from "../utils/useNuiEvent";
+  import { fetchNui } from "../utils/fetchNui";
   import scoretimer_generic_tick from "/images/scoretimer_generic_tick.png";
   import scoretimer_generic_cross from "/images/scoretimer_generic_cross.png";
   import menu_icon_alert from "/images/menu_icon_alert.png";
   import help_text_bg from "/images/help_text_bg.png";
 
-  let progress = 100;
-  let isNotifyVisible = false;
-  let showProgressBar = true;
+  let notificationsBeingDisplayed = [];
 
-  let notificationQueue = []; // Queue to manage notifications
-  let currentNotification = null; // The currently displayed notification
-  let textContainerHeight = 0; // To store the dynamic height of the text container
+  let maxNotifications: number;
+
+  function fetchMaxNotifications() {
+    fetchNui("ws_notify:nui:sendMaxVisibleNotifications")
+      .then((data) => {
+        maxNotifications = data;
+      })
+      .catch((error) => {
+        maxNotifications = 4;
+        console.log("something is wrong please check your config");
+      });
+  }
 
   function addNotification(notifyType, message, duration) {
-    const id = Date.now();
-    notificationQueue.push({ id, notifyType, message, duration });
+    const id = Date.now() + Math.random();
 
-    // If no notification is currently displayed, start processing the queue
-    if (!currentNotification) {
-      processQueue();
+    const notification = {
+      id,
+      notifyType,
+      message,
+      duration,
+      progress: 100,
+      textContainerHeight: 0,
+      interval: null,
+    };
+
+    if (notificationsBeingDisplayed.length >= maxNotifications) {
+      const oldestNotification = notificationsBeingDisplayed.shift();
+      clearInterval(oldestNotification.interval);
     }
+
+    notificationsBeingDisplayed = [
+      ...notificationsBeingDisplayed,
+      notification,
+    ];
+
+    startProgress(notification);
   }
 
-  function processQueue() {
-    if (notificationQueue.length === 0) {
-      currentNotification = null;
-      return;
-    }
+  function startProgress(notification) {
+    const totalDuration = notification.duration;
+    const steps = 100;
+    const intervalDuration = totalDuration / steps;
 
-    currentNotification = notificationQueue.shift(); // Get the next notification in the queue
-    isNotifyVisible = true;
+    const interval = setInterval(() => {
+      if (notification.progress > 0) {
+        notification.progress -= 1;
 
-    startProgress(currentNotification.duration).then(() => {
-      removeNotification(currentNotification.id);
-      isNotifyVisible = false;
-      setTimeout(() => {
-        processQueue(); // Process the next notification in the queue after fade-out
-      }, 1000); // Ensure this matches the fade-out duration
-    });
+        notificationsBeingDisplayed = [...notificationsBeingDisplayed];
+      } else {
+        notification.progress = 0;
+        clearInterval(interval);
+
+        notificationsBeingDisplayed = notificationsBeingDisplayed.filter(
+          (n) => n.id !== notification.id
+        );
+      }
+    }, intervalDuration);
+
+    notification.interval = interval;
   }
-
-  function removeNotification(id) {
-    notificationQueue = notificationQueue.filter(
-      (notification) => notification.id !== id
-    );
-  }
-
-  function startProgress(totalDuration) {
-    return new Promise((resolve) => {
-      progress = 100; // Reset progress
-
-      const steps = 100; // 100 steps
-      const intervalDuration = totalDuration / steps; // Calculate interval per step
-
-      const interval = setInterval(() => {
-        if (progress > 0) {
-          progress -= 1; // Decrease progress by 1 each interval
-        } else {
-          progress = 0;
-          clearInterval(interval); // Stop the interval when progress reaches 0
-          showProgressBar = false; // Hide the progress bar
-          setTimeout(() => {
-            resolve(); // Resolve the promise when progress completes
-          }, 500); // Optional delay before fade-out
-        }
-      }, intervalDuration);
-    });
-  }
-
-  /* onMount(() => {
-    // Example notification to test
-    addNotification(
-      "info",
-      "This is a test notification with a much longer message to see how the component handles wrapping and displaying of text. ",
-      153500
-    );
-  }); */
 
   useNuiEvent("displayNotification", (data: any) => {
     addNotification(data.notifyType, data.message, data.duration);
   });
 
-  // Reactively update the height of the text container
-  $: if (currentNotification) {
-    setTimeout(() => {
-      const textContainer = document.getElementById("text-container");
-      if (textContainer) {
-        textContainerHeight = textContainer.offsetHeight;
-      }
-    }, 0);
+  function measureHeight(node, notification) {
+    notification.textContainerHeight = node.offsetHeight;
+
+    notificationsBeingDisplayed = [...notificationsBeingDisplayed];
+
+    const observer = new ResizeObserver(() => {
+      notification.textContainerHeight = node.offsetHeight;
+
+      notificationsBeingDisplayed = [...notificationsBeingDisplayed];
+    });
+
+    observer.observe(node);
+
+    return {
+      destroy() {
+        observer.disconnect();
+      },
+    };
   }
+
+  onMount(() => {
+    fetchMaxNotifications();
+    // addNotification("info", "First notification (oldest).", 120000);
+  });
 </script>
 
-<div class="overflow-hidden">
-  {#if isNotifyVisible && currentNotification}
+<div
+  class="absolute top-1/2 right-0 h-auto flex flex-col items-center space-y-4 translate-y-[-50%] overflow-hidden"
+>
+  {#each notificationsBeingDisplayed as notification (notification.id)}
     <div
-      class="flex h-screen justify-end items-center"
-      in:fade={{ duration: 1000 }}
-      out:fly={{ x: 50, duration: 1000 }}
+      class="flex justify-end items-center"
+      in:fade={{ duration: 500 }}
+      out:fly={{ x: 50, duration: 500 }}
     >
       <div class="relative pr-4">
-        <!-- Image with dynamic height -->
         <img
           src={help_text_bg}
           alt="helptextbg"
-          class=" w-[21rem]"
-          style="height: {textContainerHeight + 40}px;"
+          class="w-[21rem]"
+          style="height: {notification.textContainerHeight + 40}px;"
         />
 
-        <div
-          class="absolute top-0 left-0 w-full h-full flex justify-left pl-6 items-center"
-        >
+        <div class="absolute top-0 left-0 w-full h-full flex pl-6 items-center">
           <div class="relative" in:fly={{ x: -50, duration: 800 }}>
-            {#if currentNotification.notifyType == "primary" || currentNotification.notifyType == "success"}
+            {#if notification.notifyType === "primary" || notification.notifyType === "success"}
               <img
                 src={scoretimer_generic_tick}
                 alt="primary"
                 class="relative left-[0.3rem] top-[0.2rem] w-4"
               />
-            {:else if currentNotification.notifyType == "error"}
+            {:else if notification.notifyType === "error"}
               <img
                 src={scoretimer_generic_cross}
                 alt="error"
                 class="relative left-[0.28rem] top-1 w-4"
               />
-            {:else if currentNotification.notifyType == "warning" || currentNotification.notifyType == "info"}
+            {:else}
               <img
                 src={menu_icon_alert}
                 alt="warning or info"
@@ -135,8 +141,7 @@
               />
             {/if}
 
-            <!-- Conditional rendering of Circular Progress Bar -->
-            {#if progress > 0}
+            {#if notification.progress > 0}
               <svg
                 class="absolute -top-[7px] -left-[5px] w-9 h-9 transform -rotate-90"
                 viewBox="0 0 36 36"
@@ -153,7 +158,7 @@
                 <circle
                   class="text-white"
                   stroke-width="3"
-                  stroke-dasharray={`${progress}, 100`}
+                  stroke-dasharray={`${notification.progress}, 100`}
                   stroke-linecap="round"
                   stroke="currentColor"
                   fill="none"
@@ -166,19 +171,18 @@
           </div>
         </div>
 
-        <!-- Text with fly-in animation and dynamic height measurement -->
         <div
-          id="text-container"
-          class="absolute top-1/2 left-[54%] transform -translate-x-1/2 -translate-y-1/2 w-[14rem] flex justify-left items-center"
+          class="absolute top-1/2 left-[54%] transform -translate-x-1/2 -translate-y-1/2 w-[14rem]"
+          use:measureHeight={notification}
         >
           <div
-            class="text-white break-words whitespace-normal font-[redm-font] text-lg"
+            class="text-white break-words font-[redm-font] text-lg"
             in:fly={{ x: 50, duration: 800 }}
           >
-            {currentNotification.message}
+            {notification.message}
           </div>
         </div>
       </div>
     </div>
-  {/if}
+  {/each}
 </div>
