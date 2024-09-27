@@ -37,8 +37,6 @@
 
 ## Usage
 
-### Client-side
-
 In your client scripts, you can trigger notifications using the following event:
 
 Client side
